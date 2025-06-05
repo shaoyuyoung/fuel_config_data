@@ -1,0 +1,206 @@
+# This file includes the prompt configuration (TensorFlow)
+system_content: |
+  You are a {lib} fuzzer, your task is to generate {lib} model and its tensor inputs.
+
+success: |
+  ### Shown here is a TensorFlow model and its tensor inputs, along with the analysis of the results after execution on eager and XLA compiler.
+  # TensorFlow model definition, initialization, and input tensors
+  class Model(tf.keras.Model):
+
+    def __init__(self):
+      super(Model, self).__init__()
+
+    def call(self, x1):
+      x2 = tf.reshape(x1, [2,2])
+      return tf.reshape(x2, [4])
+
+  m = Model()
+
+  input_shape = [4]
+  x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+  ### Result Analysis
+  1. **Explanation**: This model does not trigger new coverage when executed on Eager and XLA compiler.
+  2. **Reasons**: The operations are straightforward tensor manipulations that are likely already covered by existing tests in TensorFlow, and the XLA compiler may optimize or simplify the operations further, preventing new coverage triggers.
+  3. **Next Testing Strategy**: To trigger new coverage, consider using models with more complex operations, such as conditionals, loops, or different types of layers that introduce varied control flow and computations.
+
+  ### Suggested APIs to use
+  tf.math.sin
+
+  ### Base on the above TensorFlow code and result analysis, generate new TensorFlow code to trigger new coverage with suggested TensorFlow APIs. Note that you can also use additional TensorFlow public APIs to satisfy model constraints, in order to avoid the invalid models.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  class Model(tf.keras.Model):
+      def __init__(self):
+          super(Model, self).__init__()
+          self.dense = tf.keras.layers.Dense(4, activation='relu')
+
+      def call(self, x1):
+          x2 = tf.reshape(x1, [2, 2])
+          x3 = tf.math.sin(x2)
+          x4 = self.dense(x3)
+          return tf.reshape(x4, [4])
+
+
+  m = Model()
+
+  input_shape = [4]
+  x1 = tf.constant([4., 5., 6., 7.], shape=input_shape)
+  ```
+
+
+
+  ### Shown here is a TensorFlow model and its tensor inputs, along with the analysis of the results after execution on eager and XLA compiler.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  {code}
+  ```
+
+  ### Result Analysis
+  {als_res}
+
+
+  ### Suggested APIs to use
+  {new_ops}
+
+  ### Base on the above TensorFlow code and result analysis, generate new TensorFlow code to trigger new coverage with suggested TensorFlow APIs. Note that you can also use additional TensorFlow public APIs to satisfy model constraints, in order to avoid the invalid models.
+  # TensorFlow model definition, initialization, and input tensors
+
+
+
+failure: |
+  ### Shown here is a TensorFlow model and its tensor inputs, along with the analysis of the results after execution on eager and XLA compiler respectively.
+  # TensorFlow model definition, initialization, and input tensors
+  class Model(tf.keras.Model):
+      def __init__(self):
+          super(Model, self).__init__()
+          self.conv = tf.keras.layers.Conv2D(filters=1, kernel_size=4, padding='valid', activation='relu')
+
+      def call(self, x):
+          x = tf.reshape(x, [1, 3, 3, 1])
+          x = self.conv(x)
+          return x
+
+
+    model = Model()
+
+    x = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], dtype=tf.float32)
+
+
+  ### Result Analysis
+  1. **Explanation**: This is a potential bug in TensorFlow XLA Compiler.
+  2. **Reasons**: When using padding='valid', the output size of the convolution is calculated as (input_size - kernel_size + 1), which results in a negative dimension (3 - 4 + 1 = 0), triggering the bug.
+  3. **Next Testing Strategy**: use different padding values to trigger similar bugs.
+
+
+  ### Suggested APIs to use
+  tf.keras.layers.Dense
+
+
+  Base on the above TensorFlow code and result analysis, generate new TensorFlow code to trigger new bugs or fix original issue.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  class Model(tf.keras.Model):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.dense = tf.keras.layers.Dense(0)  # Zero units
+
+    def call(self, x):
+        return self.dense(x)
+
+  m = Model()
+  x = tf.constant([[1.0]])
+  ```
+
+
+
+  ### Shown here is a TensorFlow model and its tensor inputs, along with the analysis of the results after execution on eager and XLA compiler respectively.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  {code}
+  ```
+
+
+  ### Result Analysis
+  {als_res}
+
+
+  Base on the above TensorFlow code and result analysis, generate new TensorFlow code to trigger new bugs whit public TensorFlow APIs.
+  # TensorFlow model definition, initialization, and input tensors
+
+
+
+
+
+
+default: |
+  ### Suggested APIs to use
+  tf.keras.layers.Conv2D
+
+
+  ### Please generate a valid TensorFlow model example with above APIs and some other TensorFlow public APIs. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  class ConvModel(tf.keras.Model):
+
+      def __init__(self):
+          super(ConvModel, self).__init__()
+          self.conv = tf.keras.layers.Conv2D(filters=8, kernel_size=(3, 3), activation='relu', input_shape=(32, 32, 3))
+
+      def call(self, x):
+          return self.conv(x)
+
+  model = ConvModel()
+
+  input_shape = (2, 32, 32, 3)
+  x = tf.random.normal(shape=input_shape)
+  ```
+
+
+  ### Suggested APIs to use
+  tf.keras.layers.Dense
+
+  ### Please generate a valid Tensorflow model with public Tensorflow APIs. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  class NewModel(tf.keras.Model):
+      def __init__(self):
+          super(NewModel, self).__init__()
+          self.dense = tf.keras.layers.Dense(units=1, activation='relu')
+
+      def call(self, x):
+          return self.dense(x)
+
+  m = NewModel()
+
+  input_shape = [None, 2]
+  x = tf.constant([[1.0, 2.0], [3.0, 4.0]], shape=input_shape)
+  ```
+
+
+  ### Suggested APIs to use
+  tf.reshape
+
+  ### Please generate a valid Tensorflow model with public Tensorflow APIs. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+  # TensorFlow model definition, initialization, and input tensors
+  ```python
+  class Model(tf.keras.Model):
+    def __init__(self):
+      super(Model, self).__init__()
+
+    def call(self, x1):
+      x2 = tf.reshape(x1, [2,2])
+      return tf.reshape(x2, [4])
+
+  m = Model()
+
+  input_shape = [4]
+  x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+  ```
+
+
+  # Suggested APIs to use
+  {new_ops}
+
+  ### Please generate a valid Tensorflow model with public Tensorflow APIs. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+  # TensorFlow model definition, initialization, and input tensors

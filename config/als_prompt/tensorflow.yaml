@@ -1,0 +1,90 @@
+system_content: |
+  You are a {lib} analyzer, your task is to analyze feedbacks for different results.
+success:
+  coverage: |  # this is the prompt used to analyze the code coverage.
+    ### Shown here is a TensorFlow model and its tensor inputs, along with its coverage result (trigger new coverage or not).
+    # TensorFlow model definition, initialization, and input tensors
+    class Model(tf.keras.Model):
+      def __init__(self):
+        super(Model, self).__init__()
+
+      def call(self, x1):
+        x2 = tf.reshape(x1, [2,2])
+        return tf.reshape(x2, [4])
+
+    m = Model()
+
+    input_shape = [4]
+    x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+    ### Coverage result
+    No new coverage is triggered.
+
+
+    Please analyze the coverage result of this TensorFlow code which executes on Eager and XLA compiler. Help me summarize the coverage result in three short sentences.
+    ### Result Analysis
+    1. **Explanation**: This model does not trigger new coverage when executed on Eager and XLA compiler.
+    2. **Reasons**: The operations are straightforward tensor manipulations that are likely already covered by existing tests in TensorFlow, and the XLA compiler may optimize or simplify the operations further, preventing new coverage triggers.
+    3. **Next Testing Strategy**: To trigger new coverage, consider using models with more complex operations, such as conditionals, loops, or different types of layers that introduce varied control flow and computations.
+
+
+
+    ### Shown here is a TensorFlow model and its tensor inputs, along with its coverage result (trigger new coverage or not).
+    # TensorFlow model definition, initialization, and input tensors
+    {code}
+
+    ### Coverage result
+    {coverage}
+
+    Please analyze the coverage result of this TensorFlow code which executes on Eager and XLA compiler. Help me summarize the coverage result in three short sentences.
+    ### Result Analysis
+
+
+
+failure:
+  exception: |  # this is the prompt used to analyze the execution exception.
+    ### Shown here is a TensorFlow model and its tensor inputs, along with its bug symptom after execution on Eager and XLA compiler.
+    # TensorFlow model definition, initialization, and input tensors
+    class Model(tf.keras.Model):
+        def __init__(self):
+            super(Model, self).__init__()
+            self.conv = tf.keras.layers.Conv2D(filters=1, kernel_size=4, padding='valid', activation='relu')
+
+        def call(self, x):
+            x = tf.reshape(x, [1, 3, 3, 1])
+            x = self.conv(x)
+            return x
+
+
+    model = Model()
+
+    x = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], dtype=tf.float32)
+
+
+    ### Bug Symptom:
+    The code throws an exception during execution.
+    The code executes successfully in eager mode but fails in compiler mode.
+    Negative dimension size caused by subtracting 4 from 3 for '{{node conv2d_1_1/convolution}} = Conv2D[T=DT_FLOAT, data_format="NHWC", dilations=[1, 1, 1, 1], explicit_paddings=[], padding="VALID", strides=[1, 1, 1, 1], use_cudnn_on_gpu=true](Reshape, conv2d_1_1/convolution/ReadVariableOp)' with input shapes: [1,3,3,1], [4,4,1,1].
+
+
+    Analyze whether this is an invalid model caused by the code itself or a potential bug in the TensorFlow. Help me summarize the symptoms of this bug in three short sentences.
+    If it is an invalid model, **Next Testing Strategy** should provide the solution to fix the model. If it is a potential bug, **Next Testing Strategy** should provide the strategy to trigger more similar bugs.
+    ### Result Analysis
+    1. **Explanation**: This is a potential bug in TensorFlow XLA Compiler.
+    2. **Reasons**: When using padding='valid', the output size of the convolution is calculated as (input_size - kernel_size + 1), which results in a negative dimension (3 - 4 + 1 = 0), triggering the bug.
+    3. **Next Testing Strategy**: use different padding values to trigger similar bugs.
+
+
+
+    ### Shown here is a TensorFlow model and its tensor inputs, along with its bug symptom after execution on Eager and XLA compiler.
+    # TensorFlow model definition, initialization, and input tensors
+    {code}
+
+    ### Bug Symptom:
+    {exception}
+
+    Analyze whether this is an invalid model caused by the code itself or a potential bug in the TensorFlow. Help me summarize the symptoms of this bug in three short sentences.
+    If it is an invalid model, **Next Testing Strategy** should provide the solution to fix the model. If it is a potential bug, **Next Testing Strategy** should provide the strategy to trigger more similar bugs.
+    ### Result Analysis
+
+
